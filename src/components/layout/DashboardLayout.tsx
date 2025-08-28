@@ -4,14 +4,12 @@ import { Sidebar } from "./Sidebar";
 export function DashboardLayout() {
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 lg:pl-0 pl-16">
-          <div className="max-w-7xl mx-auto p-4 lg:p-8">
-            <Outlet />
-          </div>
-        </main>
-      </div>
+      <Sidebar />
+      <main className="ml-20 lg:ml-72 transition-all duration-300">
+        <div className="max-w-7xl mx-auto p-4 lg:p-8">
+          <Outlet />
+        </div>
+      </main>
     </div>
   );
 }

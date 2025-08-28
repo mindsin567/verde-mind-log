@@ -60,7 +60,7 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
 
       {/* Main Navigation */}
-      <nav className="flex-1 p-4 space-y-2 overflow-hidden">
+      <nav className="p-4 space-y-2">
         {mainNavigation.map((item) => {
           const isActive = location.pathname === item.href;
           return (
@@ -83,6 +83,31 @@ export function Sidebar({ className }: SidebarProps) {
           );
         })}
       </nav>
+
+      {/* Spacer to push bottom content down */}
+      <div className="flex-1"></div>
+
+      {/* Collapse Toggle - Desktop Only */}
+      <div className="hidden lg:block p-4 border-t border-border">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className={cn(
+            "w-full flex items-center gap-2 hover:bg-accent text-muted-foreground hover:text-accent-foreground transition-all duration-200",
+            isCollapsed && "justify-center px-0"
+          )}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <>
+              <ChevronLeft className="h-4 w-4" />
+              <span className="text-xs">Collapse</span>
+            </>
+          )}
+        </Button>
+      </div>
 
       {/* Bottom Navigation - Profile & Settings */}
       <div className="p-4 space-y-2 border-t border-border">
@@ -108,40 +133,6 @@ export function Sidebar({ className }: SidebarProps) {
           );
         })}
       </div>
-
-      {/* Collapse Toggle - Desktop Only */}
-      <div className="hidden lg:block p-4 border-t border-border">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={cn(
-            "w-full flex items-center gap-2 hover:bg-accent text-muted-foreground hover:text-accent-foreground transition-all duration-200",
-            isCollapsed && "justify-center px-0"
-          )}
-        >
-          {isCollapsed ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <>
-              <ChevronLeft className="h-4 w-4" />
-              <span className="text-xs">Collapse</span>
-            </>
-          )}
-        </Button>
-      </div>
-
-      {/* Mindful Moment - Only when expanded */}
-      {!isCollapsed && (
-        <div className="p-4 border-t border-border">
-          <div className="p-4 bg-wellness-calm rounded-xl">
-            <p className="text-sm font-medium text-foreground">Take a mindful moment</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Remember to breathe and be present 🌱
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 
@@ -168,11 +159,11 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-40 transform transition-all duration-300 ease-in-out lg:translate-x-0 h-screen flex-shrink-0",
+          "fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out h-screen flex-shrink-0",
           // Mobile states
-          isMobileOpen ? "translate-x-0" : "-translate-x-full",
+          isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           // Desktop collapsed states
-          isCollapsed ? "lg:w-20" : "lg:w-72",
+          isCollapsed ? "w-20" : "w-72",
           className
         )}
       >
