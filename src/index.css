@@ -2,41 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* MindIn Design System - Mental Health Wellness Theme
+All colors MUST be HSL. Calm green palette with mindful aesthetics.
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Calm green theme - inspired by nature and wellness */
+    --background: 139 20% 98%; /* Very light green-white */
+    --foreground: 220 15% 15%; /* Dark text for readability */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 220 15% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 220 15% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Calm Green (#4CAF50) */
+    --primary: 122 39% 49%; /* #4CAF50 */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 122 40% 35%; /* #2E7D32 */
+    --primary-light: 139 50% 95%; /* #E8F5E9 */
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Soft neutral tones */
+    --secondary: 139 20% 96%;
+    --secondary-foreground: 220 15% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted - Subtle background tones */
+    --muted: 139 15% 96%;
+    --muted-foreground: 220 10% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Complementary wellness tones */
+    --accent: 139 25% 94%;
+    --accent-foreground: 220 15% 20%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Wellness-specific colors */
+    --wellness-calm: 139 30% 85%; /* Light green for backgrounds */
+    --wellness-focus: 204 100% 97%; /* Very light blue for focus areas */
+    --wellness-warm: 45 100% 96%; /* Warm light yellow for positivity */
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Status colors */
+    --success: 122 39% 49%; /* Same as primary */
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 45 93% 58%;
+    --warning-foreground: 0 0% 100%;
+    
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --radius: 0.5rem;
+    --border: 139 15% 90%;
+    --input: 139 15% 94%;
+    --ring: 122 39% 49%;
+
+    /* Border radius - rounded corners for calm feel */
+    --radius: 1rem; /* 2xl rounded corners */
+    --radius-lg: 1.5rem;
+    --radius-xl: 2rem;
+
+    /* Shadows for cards */
+    --shadow-wellness: 0 4px 12px -2px hsl(122 39% 49% / 0.08);
+    --shadow-card: 0 2px 8px -1px hsl(220 15% 15% / 0.05);
+    
+    /* Transitions for smooth interactions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
 
@@ -100,6 +129,31 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-roboto;
+  }
+}
+
+@layer components {
+  /* Wellness card component base */
+  .wellness-card {
+    @apply bg-card rounded-2xl shadow-[var(--shadow-card)] border border-border/50 p-6 transition-[var(--transition-smooth)];
+  }
+  
+  .wellness-card:hover {
+    @apply shadow-[var(--shadow-wellness)] translate-y-[-2px];
+  }
+
+  /* Mood emoji picker styles */
+  .mood-emoji {
+    @apply text-3xl cursor-pointer transition-transform duration-200 hover:scale-110 active:scale-95;
+  }
+
+  /* Sidebar wellness theme */
+  .sidebar-item-active {
+    @apply bg-primary text-primary-foreground font-medium;
+  }
+  
+  .sidebar-item {
+    @apply hover:bg-accent hover:text-accent-foreground transition-[var(--transition-smooth)];
   }
 }
