@@ -8,6 +8,11 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import MoodLog from "./pages/MoodLog";
+import Diary from "./pages/Diary";
+import Chat from "./pages/Chat";
+import Summary from "./pages/Summary";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
@@ -29,11 +34,11 @@ const App = () => (
           <Route path="/" element={<DashboardLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="mood" element={<MoodLog />} />
-            <Route path="diary" element={<div className="p-8 text-center text-muted-foreground">Diary page coming soon! 📝</div>} />
-            <Route path="chat" element={<div className="p-8 text-center text-muted-foreground">AI Chat coming soon! 🤖</div>} />
-            <Route path="summary" element={<div className="p-8 text-center text-muted-foreground">Summary page coming soon! 📊</div>} />
-            <Route path="profile" element={<div className="p-8 text-center text-muted-foreground">Profile page coming soon! 👤</div>} />
-            <Route path="settings" element={<div className="p-8 text-center text-muted-foreground">Settings page coming soon! ⚙️</div>} />
+            <Route path="diary" element={<Diary />} />
+            <Route path="chat" element={<Chat />} />
+            <Route path="summary" element={<Summary />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
           
           {/* Catch-all route */}
