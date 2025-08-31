@@ -21,7 +21,7 @@ export type Database = {
           id: number
           recommendations: string[]
           source: string
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           context?: string | null
@@ -29,7 +29,7 @@ export type Database = {
           id?: number
           recommendations: string[]
           source: string
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           context?: string | null
@@ -37,17 +37,9 @@ export type Database = {
           id?: number
           recommendations?: string[]
           source?: string
-          user_id?: number | null
+          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "airecommendations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       aisummaries: {
         Row: {
@@ -55,31 +47,23 @@ export type Database = {
           id: number
           period: string
           summary: string
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
           id?: number
           period: string
           summary: string
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
           id?: number
           period?: string
           summary?: string
-          user_id?: number | null
+          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "aisummaries_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       chatmessages: {
         Row: {
@@ -87,31 +71,23 @@ export type Database = {
           id: number
           sender: string
           timestamp: string | null
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           content: string
           id?: number
           sender: string
           timestamp?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           content?: string
           id?: number
           sender?: string
           timestamp?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "chatmessages_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       diaryentries: {
         Row: {
@@ -120,7 +96,7 @@ export type Database = {
           id: number
           mood: string | null
           title: string
-          user_id: number | null
+          user_id: string | null
           word_count: number
         }
         Insert: {
@@ -129,7 +105,7 @@ export type Database = {
           id?: number
           mood?: string | null
           title: string
-          user_id?: number | null
+          user_id?: string | null
           word_count: number
         }
         Update: {
@@ -138,18 +114,10 @@ export type Database = {
           id?: number
           mood?: string | null
           title?: string
-          user_id?: number | null
+          user_id?: string | null
           word_count?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "diaryentries_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       moodlogs: {
         Row: {
@@ -158,7 +126,7 @@ export type Database = {
           emoji: string
           id: number
           note: string | null
-          user_id: number | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -166,7 +134,7 @@ export type Database = {
           emoji: string
           id?: number
           note?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -174,45 +142,40 @@ export type Database = {
           emoji?: string
           id?: number
           note?: string | null
-          user_id?: number | null
+          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "moodlogs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       users: {
         Row: {
+          auth_id: string | null
+          avatar_url: string | null
           bio: string | null
           created_at: string | null
           email: string
           id: number
           location: string | null
           name: string
-          password: string
         }
         Insert: {
+          auth_id?: string | null
+          avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
           email: string
           id?: number
           location?: string | null
           name: string
-          password: string
         }
         Update: {
+          auth_id?: string | null
+          avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
           email?: string
           id?: number
           location?: string | null
           name?: string
-          password?: string
         }
         Relationships: []
       }
