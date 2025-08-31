@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MessageCircle, Send, Bot, User, Sparkles, Heart, Brain, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,9 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
@@ -24,103 +21,46 @@ const suggestedPrompts = [
   { text: "Give me a wellness tip", icon: Lightbulb }
 ];
 
+const initialMessages: Message[] = [
+  {
+    id: "1",
+    type: "ai",
+    content: "Hello! I'm your AI wellness companion. I'm here to support your mental health journey, provide mindfulness tips, and help you reflect on your emotions. How are you feeling today?",
+    timestamp: new Date()
+  }
+];
+
 export default function Chat() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const { user } = useAuth();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (user) {
-      loadChatHistory();
-    }
-  }, [user]);
-
-  const loadChatHistory = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('chatmessages')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('timestamp', { ascending: true })
-        .limit(50);
-
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        const formattedMessages = data.map(msg => ({
-          id: msg.id.toString(),
-          type: msg.sender as 'user' | 'ai',
-          content: msg.content,
-          timestamp: new Date(msg.timestamp),
-        }));
-        setMessages(formattedMessages);
-      } else {
-        // Show welcome message for new users
-        const welcomeMessage: Message = {
-          id: 'welcome',
-          type: 'ai',
-          content: "Hello! I'm your AI wellness companion. I'm here to support your mental health journey. How are you feeling today?",
-          timestamp: new Date(),
-        };
-        setMessages([welcomeMessage]);
-      }
-    } catch (error) {
-      console.error('Error loading chat history:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load chat history",
-        variant: "destructive",
-      });
-    }
-  };
 
   const sendMessage = async (content: string) => {
-    if (!content.trim() || !user) return;
+    if (!content.trim()) return;
 
+    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
       content,
-      timestamp: new Date(),
+      timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue("");
     setIsTyping(true);
 
-    try {
-      const response = await supabase.functions.invoke('ai-chat', {
-        body: {
-          message: content,
-          userId: user.id
-        }
-      });
-
-      if (response.error) throw response.error;
-
+    // Simulate AI response
+    setTimeout(() => {
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: response.data.response,
-        timestamp: new Date(),
+        content: getAIResponse(content),
+        timestamp: new Date()
       };
-
       setMessages(prev => [...prev, aiResponse]);
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
-      
-      // Remove the user message if AI response failed
-      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
-    } finally {
       setIsTyping(false);
-    }
+    }, 1500);
   };
 
   const getAIResponse = (userMessage: string): string => {
@@ -170,17 +110,17 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Connected Status Card */}
-      <Card className="border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-800">
+      {/* Notice Card */}
+      <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <Sparkles className="h-5 w-5 text-green-500 mt-0.5" />
+            <Sparkles className="h-5 w-5 text-amber-500 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                AI Chat Active with Gemini
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                Connect Supabase for Full AI Chat
               </p>
-              <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                Connected to Supabase with real AI conversations and chat history persistence.
+              <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                This is a demo version. Connect to Supabase to enable real AI conversations with Gemini API and save your chat history.
               </p>
             </div>
           </div>
@@ -195,7 +135,7 @@ export default function Chat() {
               <CardTitle className="text-lg flex items-center gap-2">
                 <Bot className="h-5 w-5" />
                 AI Assistant
-                <Badge variant="secondary" className="ml-auto">AI Powered</Badge>
+                <Badge variant="secondary" className="ml-auto">Demo Mode</Badge>
               </CardTitle>
             </CardHeader>
             

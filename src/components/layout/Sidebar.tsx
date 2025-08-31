@@ -12,12 +12,10 @@ import {
   X,
   Leaf,
   ChevronLeft,
-  ChevronRight,
-  LogOut
+  ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
 
 // Main navigation items
 const mainNavigation = [
@@ -42,7 +40,6 @@ export function Sidebar({ className }: SidebarProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
-  const { signOut } = useAuth();
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-card border-r border-border">
@@ -135,20 +132,6 @@ export function Sidebar({ className }: SidebarProps) {
             </NavLink>
           );
         })}
-        
-        {/* Sign Out Button */}
-        <Button
-          onClick={signOut}
-          variant="ghost"
-          className={cn(
-            "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-muted-foreground hover:text-destructive hover:bg-destructive/10",
-            isCollapsed && "justify-center"
-          )}
-          title={isCollapsed ? "Sign Out" : undefined}
-        >
-          <LogOut className="h-5 w-5 flex-shrink-0" />
-          {!isCollapsed && <span>Sign Out</span>}
-        </Button>
       </div>
     </div>
   );
