@@ -21,7 +21,8 @@ export type Database = {
           id: number
           recommendations: string[]
           source: string
-          user_id: number | null
+          updated_at: string | null
+          user_id: string
         }
         Insert: {
           context?: string | null
@@ -29,7 +30,8 @@ export type Database = {
           id?: number
           recommendations: string[]
           source: string
-          user_id?: number | null
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
           context?: string | null
@@ -37,14 +39,15 @@ export type Database = {
           id?: number
           recommendations?: string[]
           source?: string
-          user_id?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "airecommendations_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -55,28 +58,31 @@ export type Database = {
           id: number
           period: string
           summary: string
-          user_id: number | null
+          updated_at: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string | null
           id?: number
           period: string
           summary: string
-          user_id?: number | null
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string | null
           id?: number
           period?: string
           summary?: string
-          user_id?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "aisummaries_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -87,28 +93,31 @@ export type Database = {
           id: number
           sender: string
           timestamp: string | null
-          user_id: number | null
+          updated_at: string | null
+          user_id: string
         }
         Insert: {
           content: string
           id?: number
           sender: string
           timestamp?: string | null
-          user_id?: number | null
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
           content?: string
           id?: number
           sender?: string
           timestamp?: string | null
-          user_id?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "chatmessages_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -120,7 +129,8 @@ export type Database = {
           id: number
           mood: string | null
           title: string
-          user_id: number | null
+          updated_at: string | null
+          user_id: string
           word_count: number
         }
         Insert: {
@@ -129,7 +139,8 @@ export type Database = {
           id?: number
           mood?: string | null
           title: string
-          user_id?: number | null
+          updated_at?: string | null
+          user_id: string
           word_count: number
         }
         Update: {
@@ -138,7 +149,8 @@ export type Database = {
           id?: number
           mood?: string | null
           title?: string
-          user_id?: number | null
+          updated_at?: string | null
+          user_id?: string
           word_count?: number
         }
         Relationships: [
@@ -146,7 +158,7 @@ export type Database = {
             foreignKeyName: "diaryentries_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -158,7 +170,8 @@ export type Database = {
           emoji: string
           id: number
           note: string | null
-          user_id: number | null
+          updated_at: string | null
+          user_id: string
         }
         Insert: {
           created_at?: string | null
@@ -166,7 +179,8 @@ export type Database = {
           emoji: string
           id?: number
           note?: string | null
-          user_id?: number | null
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
           created_at?: string | null
@@ -174,45 +188,79 @@ export type Database = {
           emoji?: string
           id?: number
           note?: string | null
-          user_id?: number | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "moodlogs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
+      profiles: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          email: string
+          id: string
+          location: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          email: string
+          id: string
+          location?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          location?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       users: {
         Row: {
+          auth_id: string | null
           bio: string | null
           created_at: string | null
           email: string
           id: number
           location: string | null
           name: string
-          password: string
+          password: string | null
         }
         Insert: {
+          auth_id?: string | null
           bio?: string | null
           created_at?: string | null
           email: string
           id?: number
           location?: string | null
           name: string
-          password: string
+          password?: string | null
         }
         Update: {
+          auth_id?: string | null
           bio?: string | null
           created_at?: string | null
           email?: string
           id?: number
           location?: string | null
           name?: string
-          password?: string
+          password?: string | null
         }
         Relationships: []
       }
