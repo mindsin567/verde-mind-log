@@ -12,9 +12,9 @@ interface DiaryEntry {
   id: string;
   title: string;
   content: string;
-  date: string;
-  mood: string;
-  tags: string[];
+  created_at: string;
+  mood?: string;
+  word_count: number;
 }
 
 // Mock data
@@ -23,25 +23,25 @@ const mockEntries: DiaryEntry[] = [
     id: "1",
     title: "A Peaceful Morning",
     content: "Started my day with meditation and felt incredibly centered. The sunrise was beautiful and I felt grateful for this moment of tranquility...",
-    date: "2024-01-15",
+    created_at: "2024-01-15T10:00:00Z",
     mood: "Peaceful",
-    tags: ["meditation", "gratitude", "morning"]
+    word_count: 25
   },
   {
     id: "2", 
     title: "Challenging Day at Work",
     content: "Today was tough with multiple deadlines. However, I managed to stay focused and complete everything on time. Feeling proud of my resilience...",
-    date: "2024-01-14",
-    mood: "Determined", 
-    tags: ["work", "resilience", "productivity"]
+    created_at: "2024-01-14T18:00:00Z",
+    mood: "Determined",
+    word_count: 28
   },
   {
     id: "3",
     title: "Quality Time with Family",
     content: "Spent the evening with loved ones. We cooked dinner together and shared stories. These moments remind me what truly matters in life...",
-    date: "2024-01-13",
+    created_at: "2024-01-13T20:00:00Z",
     mood: "Joyful",
-    tags: ["family", "connection", "joy"]
+    word_count: 26
   }
 ];
 
@@ -52,28 +52,28 @@ export default function Diary() {
   const [newEntry, setNewEntry] = useState({
     title: "",
     content: "",
-    mood: "",
-    tags: ""
+    mood: ""
   });
 
   const filteredEntries = entries.filter(entry => 
     entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     entry.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    entry.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    (entry.mood && entry.mood.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleCreateEntry = () => {
     if (newEntry.title && newEntry.content) {
+      const wordCount = newEntry.content.split(/\s+/).filter(word => word.length > 0).length;
       const entry: DiaryEntry = {
         id: Date.now().toString(),
         title: newEntry.title,
         content: newEntry.content,
-        date: new Date().toISOString().split('T')[0],
+        created_at: new Date().toISOString(),
         mood: newEntry.mood,
-        tags: newEntry.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+        word_count: wordCount
       };
       setEntries([entry, ...entries]);
-      setNewEntry({ title: "", content: "", mood: "", tags: "" });
+      setNewEntry({ title: "", content: "", mood: "" });
       setIsNewEntryOpen(false);
     }
   };
@@ -137,15 +137,6 @@ export default function Diary() {
                     placeholder="How are you feeling?"
                     value={newEntry.mood}
                     onChange={(e) => setNewEntry(prev => ({ ...prev, mood: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="tags">Tags (comma separated)</Label>
-                  <Input
-                    id="tags"
-                    placeholder="gratitude, work, family..."
-                    value={newEntry.tags}
-                    onChange={(e) => setNewEntry(prev => ({ ...prev, tags: e.target.value }))}
                   />
                 </div>
               </div>
@@ -245,12 +236,15 @@ export default function Diary() {
                   <div className="space-y-1">
                     <CardTitle className="text-lg">{entry.title}</CardTitle>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>{new Date(entry.date).toLocaleDateString()}</span>
+                      <span>{new Date(entry.created_at).toLocaleDateString()}</span>
                       {entry.mood && (
                         <Badge variant="secondary" className="text-xs">
                           {entry.mood}
                         </Badge>
                       )}
+                      <Badge variant="outline" className="text-xs">
+                        {entry.word_count} words
+                      </Badge>
                     </div>
                   </div>
                   <Button
@@ -267,15 +261,6 @@ export default function Diary() {
                 <p className="text-muted-foreground mb-3 leading-relaxed">
                   {entry.content.length > 200 ? `${entry.content.substring(0, 200)}...` : entry.content}
                 </p>
-                {entry.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {entry.tags.map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs">
-                        #{tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
               </CardContent>
             </Card>
           ))

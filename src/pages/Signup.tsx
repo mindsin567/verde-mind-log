@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Leaf, ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { authService } from "@/services/auth";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -43,16 +44,39 @@ export default function Signup() {
 
     setIsLoading(true);
 
-    // Simulate signup process
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      const { user, error } = await authService.signUp({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
+      });
 
-    toast({
-      title: "Welcome to MindIn! 🌱",
-      description: "Your account has been created successfully. Let's start your wellness journey!",
-    });
+      if (error) {
+        toast({
+          title: "Signup failed",
+          description: error,
+          variant: "destructive"
+        });
+        return;
+      }
 
-    setIsLoading(false);
-    navigate("/dashboard");
+      if (user) {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        toast({
+          title: "Welcome to MindIn! 🌱",
+          description: "Your account has been created successfully. Let's start your wellness journey!",
+        });
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      toast({
+        title: "Signup failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

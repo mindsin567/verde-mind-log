@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Leaf, ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { authService } from "@/services/auth";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -20,16 +21,38 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate login process
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const { user, error } = await authService.signIn({
+        email: formData.email,
+        password: formData.password
+      });
 
-    toast({
-      title: "Welcome back! 🌱",
-      description: "You've successfully signed in to MindIn.",
-    });
+      if (error) {
+        toast({
+          title: "Login failed",
+          description: error,
+          variant: "destructive"
+        });
+        return;
+      }
 
-    setIsLoading(false);
-    navigate("/dashboard");
+      if (user) {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        toast({
+          title: "Welcome back! 🌱",
+          description: "You've successfully signed in to MindIn.",
+        });
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

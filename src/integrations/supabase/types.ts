@@ -16,30 +16,27 @@ export type Database = {
     Tables: {
       airecommendations: {
         Row: {
-          context: string | null
-          created_at: string | null
-          id: number
+          context: string
+          created_at: string
+          id: string
           recommendations: string[]
           source: string
-          updated_at: string | null
           user_id: string
         }
         Insert: {
-          context?: string | null
-          created_at?: string | null
-          id?: number
+          context: string
+          created_at?: string
+          id?: string
           recommendations: string[]
           source: string
-          updated_at?: string | null
           user_id: string
         }
         Update: {
-          context?: string | null
-          created_at?: string | null
-          id?: number
+          context?: string
+          created_at?: string
+          id?: string
           recommendations?: string[]
           source?: string
-          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -47,34 +44,31 @@ export type Database = {
             foreignKeyName: "airecommendations_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
       }
       aisummaries: {
         Row: {
-          created_at: string | null
-          id: number
+          created_at: string
+          id: string
           period: string
           summary: string
-          updated_at: string | null
           user_id: string
         }
         Insert: {
-          created_at?: string | null
-          id?: number
+          created_at?: string
+          id?: string
           period: string
           summary: string
-          updated_at?: string | null
           user_id: string
         }
         Update: {
-          created_at?: string | null
-          id?: number
+          created_at?: string
+          id?: string
           period?: string
           summary?: string
-          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -82,7 +76,7 @@ export type Database = {
             foreignKeyName: "aisummaries_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -90,26 +84,23 @@ export type Database = {
       chatmessages: {
         Row: {
           content: string
-          id: number
+          id: string
           sender: string
-          timestamp: string | null
-          updated_at: string | null
+          timestamp: string
           user_id: string
         }
         Insert: {
           content: string
-          id?: number
+          id?: string
           sender: string
-          timestamp?: string | null
-          updated_at?: string | null
+          timestamp?: string
           user_id: string
         }
         Update: {
           content?: string
-          id?: number
+          id?: string
           sender?: string
-          timestamp?: string | null
-          updated_at?: string | null
+          timestamp?: string
           user_id?: string
         }
         Relationships: [
@@ -117,7 +108,7 @@ export type Database = {
             foreignKeyName: "chatmessages_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -125,31 +116,28 @@ export type Database = {
       diaryentries: {
         Row: {
           content: string
-          created_at: string | null
-          id: number
+          created_at: string
+          id: string
           mood: string | null
           title: string
-          updated_at: string | null
           user_id: string
           word_count: number
         }
         Insert: {
           content: string
-          created_at?: string | null
-          id?: number
+          created_at?: string
+          id?: string
           mood?: string | null
           title: string
-          updated_at?: string | null
           user_id: string
           word_count: number
         }
         Update: {
           content?: string
-          created_at?: string | null
-          id?: number
+          created_at?: string
+          id?: string
           mood?: string | null
           title?: string
-          updated_at?: string | null
           user_id?: string
           word_count?: number
         }
@@ -158,37 +146,34 @@ export type Database = {
             foreignKeyName: "diaryentries_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
       }
       moodlogs: {
         Row: {
-          created_at: string | null
+          created_at: string
           date: string
           emoji: string
-          id: number
+          id: string
           note: string | null
-          updated_at: string | null
           user_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           date: string
           emoji: string
-          id?: number
+          id?: string
           note?: string | null
-          updated_at?: string | null
           user_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           date?: string
           emoji?: string
-          id?: number
+          id?: string
           note?: string | null
-          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -196,71 +181,38 @@ export type Database = {
             foreignKeyName: "moodlogs_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
       }
-      profiles: {
+      users: {
         Row: {
           bio: string | null
-          created_at: string | null
+          created_at: string
           email: string
           id: string
           location: string | null
           name: string
-          updated_at: string | null
+          password: string
         }
         Insert: {
           bio?: string | null
-          created_at?: string | null
+          created_at?: string
           email: string
-          id: string
+          id?: string
           location?: string | null
           name: string
-          updated_at?: string | null
+          password: string
         }
         Update: {
           bio?: string | null
-          created_at?: string | null
+          created_at?: string
           email?: string
           id?: string
           location?: string | null
           name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      users: {
-        Row: {
-          auth_id: string | null
-          bio: string | null
-          created_at: string | null
-          email: string
-          id: number
-          location: string | null
-          name: string
-          password: string | null
-        }
-        Insert: {
-          auth_id?: string | null
-          bio?: string | null
-          created_at?: string | null
-          email: string
-          id?: number
-          location?: string | null
-          name: string
-          password?: string | null
-        }
-        Update: {
-          auth_id?: string | null
-          bio?: string | null
-          created_at?: string | null
-          email?: string
-          id?: number
-          location?: string | null
-          name?: string
-          password?: string | null
+          password?: string
         }
         Relationships: []
       }

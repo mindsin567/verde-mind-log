@@ -17,27 +17,25 @@ export default function Dashboard() {
   const todayMood = {
     id: "1",
     emoji: "😊",
-    mood: "Happy",
     note: "Had a great morning coffee and feeling positive about the day ahead!",
-    timestamp: new Date(),
-    intensity: 4
+    date: new Date().toISOString().split('T')[0],
+    created_at: new Date().toISOString()
   };
 
   const recentEntries = [
     {
       id: "2",
       emoji: "😌",
-      mood: "Peaceful",
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      intensity: 4
+      note: "",
+      date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString().split('T')[0],
+      created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
     },
     {
       id: "3",
       emoji: "🤔",
-      mood: "Thoughtful",
       note: "Reflecting on yesterday's events",
-      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-      intensity: 3
+      date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
     }
   ];
 

@@ -11,11 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function MoodLog() {
   const { toast } = useToast();
-  const [selectedMood, setSelectedMood] = useState<{
-    emoji: string;
-    mood: string;
-    intensity: number;
-  } | null>(null);
+  const [selectedEmoji, setSelectedEmoji] = useState<string>("");
   const [note, setNote] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -24,34 +20,32 @@ export default function MoodLog() {
     {
       id: "1",
       emoji: "😊",
-      mood: "Happy",
       note: "Had a great morning coffee and feeling positive!",
-      timestamp: new Date(),
-      intensity: 4
+      date: new Date().toISOString().split('T')[0],
+      created_at: new Date().toISOString()
     },
     {
       id: "2",
       emoji: "😌",
-      mood: "Peaceful",
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      intensity: 4
+      note: "",
+      date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString().split('T')[0],
+      created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
     },
     {
       id: "3",
       emoji: "🤔",
-      mood: "Thoughtful",
       note: "Reflecting on yesterday's events and planning ahead",
-      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-      intensity: 3
+      date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
     }
   ];
 
-  const handleMoodSelect = (emoji: string, mood: string, intensity: number) => {
-    setSelectedMood({ emoji, mood, intensity });
+  const handleMoodSelect = (emoji: string) => {
+    setSelectedEmoji(emoji);
   };
 
   const handleSave = async () => {
-    if (!selectedMood) return;
+    if (!selectedEmoji) return;
     
     setIsSaving(true);
     
@@ -60,11 +54,11 @@ export default function MoodLog() {
     
     toast({
       title: "Mood logged successfully! 🌱",
-      description: `Feeling ${selectedMood.mood} has been saved to your wellness journal.`,
+      description: "Your mood has been saved to your wellness journal.",
     });
     
     setIsSaving(false);
-    setSelectedMood(null);
+    setSelectedEmoji("");
     setNote("");
   };
 
@@ -95,10 +89,10 @@ export default function MoodLog() {
             <CardContent className="space-y-6">
               <EmojiPicker 
                 onSelect={handleMoodSelect}
-                selectedEmoji={selectedMood?.emoji}
+                selectedEmoji={selectedEmoji}
               />
               
-              {selectedMood && (
+              {selectedEmoji && (
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-foreground mb-2 block">

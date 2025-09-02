@@ -4,10 +4,9 @@ import { Badge } from "@/components/ui/badge";
 interface MoodEntry {
   id: string;
   emoji: string;
-  mood: string;
   note?: string;
-  timestamp: Date;
-  intensity: number; // 1-5 scale
+  date: string;
+  created_at: string;
 }
 
 interface MoodCardProps {
@@ -16,14 +15,12 @@ interface MoodCardProps {
 }
 
 export function MoodCard({ entry, compact = false }: MoodCardProps) {
-  const getIntensityColor = (intensity: number) => {
-    if (intensity >= 4) return "bg-success";
-    if (intensity >= 3) return "bg-warning";
-    return "bg-destructive";
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
   };
 
   if (compact) {
@@ -33,16 +30,10 @@ export function MoodCard({ entry, compact = false }: MoodCardProps) {
           <div className="flex items-center gap-3">
             <span className="text-2xl">{entry.emoji}</span>
             <div>
-              <p className="font-medium text-sm">{entry.mood}</p>
-              <p className="text-xs text-muted-foreground">{formatTime(entry.timestamp)}</p>
+              <p className="font-medium text-sm">{formatDate(entry.date)}</p>
+              <p className="text-xs text-muted-foreground">{formatTime(entry.created_at)}</p>
             </div>
           </div>
-          <Badge 
-            className={`${getIntensityColor(entry.intensity)} text-white text-xs`}
-            variant="secondary"
-          >
-            {entry.intensity}/5
-          </Badge>
         </div>
         {entry.note && (
           <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{entry.note}</p>
@@ -58,18 +49,12 @@ export function MoodCard({ entry, compact = false }: MoodCardProps) {
           <div className="flex items-center gap-3">
             <span className="text-3xl">{entry.emoji}</span>
             <div>
-              <CardTitle className="text-lg">{entry.mood}</CardTitle>
+              <CardTitle className="text-lg">{formatDate(entry.date)}</CardTitle>
               <p className="text-sm text-muted-foreground">
-                {entry.timestamp.toLocaleDateString()} at {formatTime(entry.timestamp)}
+                at {formatTime(entry.created_at)}
               </p>
             </div>
           </div>
-          <Badge 
-            className={`${getIntensityColor(entry.intensity)} text-white`}
-            variant="secondary"
-          >
-            Intensity {entry.intensity}/5
-          </Badge>
         </div>
       </CardHeader>
       {entry.note && (

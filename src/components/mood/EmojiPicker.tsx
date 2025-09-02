@@ -18,7 +18,7 @@ const moodEmojis = [
 ];
 
 interface EmojiPickerProps {
-  onSelect: (emoji: string, mood: string, intensity: number) => void;
+  onSelect: (emoji: string) => void;
   selectedEmoji?: string;
 }
 
@@ -40,7 +40,7 @@ export function EmojiPicker({ onSelect, selectedEmoji }: EmojiPickerProps) {
                 : "hover:bg-accent border-2 border-transparent",
               "mood-emoji"
             )}
-            onClick={() => onSelect(item.emoji, item.mood, item.intensity)}
+            onClick={() => onSelect(item.emoji)}
             onMouseEnter={() => setHoveredEmoji(item.emoji)}
             onMouseLeave={() => setHoveredEmoji(null)}
           >
