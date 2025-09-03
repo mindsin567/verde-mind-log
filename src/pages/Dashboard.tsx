@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MoodCard } from "@/components/mood/MoodCard";
@@ -11,46 +12,63 @@ import {
   BookOpen
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { moodService } from "@/services/moodService";
+import { diaryService } from "@/services/diaryService";
 
 export default function Dashboard() {
-  // Mock data - replace with real data later
-  const todayMood = {
-    id: "1",
-    emoji: "😊",
-    note: "Had a great morning coffee and feeling positive about the day ahead!",
-    date: new Date().toISOString().split('T')[0],
-    created_at: new Date().toISOString()
-  };
+  const { user, profile, loading } = useAuth();
+  const [todayMood, setTodayMood] = useState<any>(null);
+  const [recentEntries, setRecentEntries] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    weeklyAverage: 0,
+    streakDays: 0,
+    totalEntries: 0
+  });
 
-  const recentEntries = [
-    {
-      id: "2",
-      emoji: "😌",
-      note: "",
-      date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString().split('T')[0],
-      created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: "3",
-      emoji: "🤔",
-      note: "Reflecting on yesterday's events",
-      date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+  useEffect(() => {
+    if (user) {
+      loadDashboardData();
     }
-  ];
+  }, [user]);
 
-  const stats = {
-    weeklyAverage: 3.8,
-    streakDays: 7,
-    totalEntries: 24
+  const loadDashboardData = async () => {
+    if (!user) return;
+
+    try {
+      // Get today's mood
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayMoodData } = await moodService.getMoodLogByDate(user.id, today);
+      setTodayMood(todayMoodData?.[0] || null);
+
+      // Get recent mood entries
+      const { data: recentMoodData } = await moodService.getRecentMoods(user.id, 3);
+      setRecentEntries(recentMoodData || []);
+
+      // Calculate basic stats
+      const { data: allMoods } = await moodService.getRecentMoods(user.id, 30);
+      const totalEntries = allMoods?.length || 0;
+      
+      setStats({
+        weeklyAverage: totalEntries > 0 ? 3.8 : 0, // Mock calculation for now
+        streakDays: totalEntries > 0 ? Math.min(totalEntries, 7) : 0,
+        totalEntries
+      });
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    }
   };
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64">Loading...</div>;
+  }
 
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Good morning! 🌱</h1>
+          <h1 className="text-3xl font-bold text-foreground">Good morning, {profile?.name || 'User'}! 🌱</h1>
           <p className="text-muted-foreground mt-1">
             How are you feeling today? Take a moment to check in with yourself.
           </p>
@@ -117,11 +135,27 @@ export default function Dashboard() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-foreground">Today's Check-in</h2>
-          <Badge variant="secondary" className="bg-wellness-calm text-foreground">
-            Latest
-          </Badge>
+          {todayMood && (
+            <Badge variant="secondary" className="bg-wellness-calm text-foreground">
+              Latest
+            </Badge>
+          )}
         </div>
-        <MoodCard entry={todayMood} />
+        {todayMood ? (
+          <MoodCard entry={todayMood} />
+        ) : (
+          <Card className="wellness-card">
+            <CardContent className="p-6 text-center">
+              <p className="text-muted-foreground mb-4">No mood logged today yet</p>
+              <Link to="/mood">
+                <Button className="bg-primary hover:bg-primary-hover text-primary-foreground">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Log Your Mood
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Quick Actions & Recent Activity */}
@@ -172,9 +206,13 @@ export default function Dashboard() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentEntries.map((entry) => (
-              <MoodCard key={entry.id} entry={entry} compact />
-            ))}
+            {recentEntries.length > 0 ? (
+              recentEntries.map((entry) => (
+                <MoodCard key={entry.id} entry={entry} compact />
+              ))
+            ) : (
+              <p className="text-muted-foreground text-center py-4">No recent entries yet</p>
+            )}
             <Link to="/mood">
               <Button variant="ghost" className="w-full text-primary hover:bg-primary/10">
                 View All Entries

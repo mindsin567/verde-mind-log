@@ -53,15 +53,31 @@ export const moodService = {
 
   async getMoodLogByDate(userId: string, date: string) {
     try {
-      const { data: moodLog, error } = await supabase
+      const { data: moodLogs, error } = await supabase
         .from('moodlogs')
         .select('*')
         .eq('user_id', userId)
         .eq('date', date)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return { data: moodLog, error: null };
+      return { data: moodLogs, error: null };
+    } catch (error: any) {
+      return { data: null, error: error.message };
+    }
+  },
+
+  async getRecentMoods(userId: string, limit: number = 10) {
+    try {
+      const { data: moodLogs, error } = await supabase
+        .from('moodlogs')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      return { data: moodLogs, error: null };
     } catch (error: any) {
       return { data: null, error: error.message };
     }
