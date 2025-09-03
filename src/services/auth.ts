@@ -1,9 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { User } from '@supabase/supabase-js';
 
-export interface User {
+export interface Profile {
   id: string;
   name: string;
-  email: string;
   bio?: string;
   location?: string;
   created_at: string;
@@ -25,21 +25,37 @@ export interface SignInData {
 export const authService = {
   async signUp(data: SignUpData) {
     try {
-      // Create user in our custom users table
-      const { data: userData, error } = await supabase
-        .from('users')
-        .insert({
-          name: data.name,
-          email: data.email,
-          password: data.password, // In real app, hash this on server
-          bio: data.bio,
-          location: data.location
-        })
-        .select()
-        .single();
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            name: data.name,
+            bio: data.bio,
+            location: data.location
+          }
+        }
+      });
 
       if (error) throw error;
-      return { user: userData, error: null };
+      
+      // Update profile with additional data if user was created
+      if (authData.user && data.bio || data.location) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            bio: data.bio, 
+            location: data.location 
+          })
+          .eq('id', authData.user.id);
+        
+        if (profileError) console.warn('Profile update failed:', profileError);
+      }
+
+      return { user: authData.user, error: null };
     } catch (error: any) {
       return { user: null, error: error.message };
     }
@@ -47,28 +63,38 @@ export const authService = {
 
   async signIn(data: SignInData) {
     try {
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', data.email)
-        .eq('password', data.password) // In real app, verify hashed password
-        .single();
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password
+      });
 
       if (error) throw error;
-      return { user: userData, error: null };
+      return { user: authData.user, error: null };
     } catch (error: any) {
-      return { user: null, error: 'Invalid email or password' };
+      return { user: null, error: error.message };
     }
   },
 
   async getCurrentUser(): Promise<User | null> {
-    // For now, return mock user or stored user
-    const storedUser = localStorage.getItem('currentUser');
-    return storedUser ? JSON.parse(storedUser) : null;
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.user ?? null;
+  },
+
+  async getCurrentProfile(): Promise<Profile | null> {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return null;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+
+    return profile;
   },
 
   async signOut() {
-    localStorage.removeItem('currentUser');
-    return { error: null };
+    const { error } = await supabase.auth.signOut();
+    return { error };
   }
 };

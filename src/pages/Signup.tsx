@@ -61,7 +61,6 @@ export default function Signup() {
       }
 
       if (user) {
-        localStorage.setItem('currentUser', JSON.stringify(user));
         toast({
           title: "Welcome to MindIn! 🌱",
           description: "Your account has been created successfully. Let's start your wellness journey!",

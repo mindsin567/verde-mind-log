@@ -37,7 +37,6 @@ export default function Login() {
       }
 
       if (user) {
-        localStorage.setItem('currentUser', JSON.stringify(user));
         toast({
           title: "Welcome back! 🌱",
           description: "You've successfully signed in to MindIn.",
