@@ -39,15 +39,7 @@ export type Database = {
           source?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "airecommendations_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       aisummaries: {
         Row: {
@@ -71,15 +63,7 @@ export type Database = {
           summary?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "aisummaries_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       chatmessages: {
         Row: {
@@ -103,15 +87,7 @@ export type Database = {
           timestamp?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "chatmessages_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       diaryentries: {
         Row: {
@@ -141,15 +117,7 @@ export type Database = {
           user_id?: string
           word_count?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "diaryentries_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       moodlogs: {
         Row: {
@@ -176,43 +144,29 @@ export type Database = {
           note?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "moodlogs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-      users: {
+      profiles: {
         Row: {
           bio: string | null
           created_at: string
-          email: string
           id: string
           location: string | null
           name: string
-          password: string
         }
         Insert: {
           bio?: string | null
           created_at?: string
-          email: string
-          id?: string
+          id: string
           location?: string | null
           name: string
-          password: string
         }
         Update: {
           bio?: string | null
           created_at?: string
-          email?: string
           id?: string
           location?: string | null
           name?: string
-          password?: string
         }
         Relationships: []
       }
