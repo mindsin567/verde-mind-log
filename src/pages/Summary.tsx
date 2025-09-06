@@ -1,11 +1,15 @@
-import { useState } from "react";
-import { TrendingUp, Calendar, Smile, Target, BarChart3, PieChart, Activity, Award } from "lucide-react";
+import { useState, useEffect } from "react";
+import { TrendingUp, Calendar, Smile, Target, BarChart3, PieChart, Activity, Award, Sparkles, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import { moodService } from "@/services/moodService";
 
 // Mock data for charts and statistics
 const weeklyMoodData = [
@@ -55,18 +59,152 @@ const insights = [
 
 export default function Summary() {
   const [timeRange, setTimeRange] = useState("7d");
+  const [aiSummary, setAiSummary] = useState<string>("");
+  const [recommendations, setRecommendations] = useState<string[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [moodLogs, setMoodLogs] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    averageMood: 0,
+    totalEntries: 0,
+    streak: 0,
+    improvement: 0
+  });
+  
+  const { user } = useAuth();
+  const { toast } = useToast();
 
-  const getTimeRangeLabel = (range: string) => {
-    switch (range) {
-      case "7d": return "Last 7 Days";
-      case "30d": return "Last 30 Days";
-      case "90d": return "Last 3 Months";
-      case "1y": return "Last Year";
-      default: return "Last 7 Days";
+  useEffect(() => {
+    if (user) {
+      loadUserData();
+    }
+  }, [user, timeRange]);
+
+  const loadUserData = async () => {
+    if (!user) return;
+
+    try {
+      // Calculate date range
+      const now = new Date();
+      let daysBack = 7;
+      switch (timeRange) {
+        case '30d': daysBack = 30; break;
+        case '90d': daysBack = 90; break;
+        case '1y': daysBack = 365; break;
+      }
+      const startDate = new Date(now.getTime() - (daysBack * 24 * 60 * 60 * 1000));
+
+      // Fetch mood logs
+      const { data: moods } = await supabase
+        .from('moodlogs')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('date', startDate.toISOString().split('T')[0])
+        .order('date', { ascending: false });
+
+      if (moods) {
+        setMoodLogs(moods);
+        
+        // Calculate stats
+        const moodScores = moods.map(mood => {
+          // Convert emoji to score (simple mapping)
+          const emojiScores: { [key: string]: number } = {
+            '😊': 9, '😄': 10, '😁': 9, '🙂': 8, '😌': 7,
+            '😐': 5, '😔': 3, '😢': 2, '😭': 1, '😤': 4,
+            '😴': 6, '🤗': 8, '😎': 9, '🥰': 10, '😍': 10
+          };
+          return emojiScores[mood.emoji] || 5;
+        });
+
+        const averageMood = moodScores.length > 0 ? moodScores.reduce((a, b) => a + b, 0) / moodScores.length : 0;
+        
+        setStats({
+          averageMood,
+          totalEntries: moods.length,
+          streak: calculateStreak(moods),
+          improvement: calculateImprovement(moodScores)
+        });
+      }
+
+      // Auto-generate summary if user has data
+      if (moods && moods.length > 0) {
+        generateAISummary();
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
     }
   };
 
-  const averageMood = weeklyMoodData.reduce((sum, day) => sum + day.score, 0) / weeklyMoodData.length;
+  const calculateStreak = (moods: any[]) => {
+    if (!moods.length) return 0;
+    
+    let streak = 0;
+    const today = new Date();
+    let currentDate = new Date(today);
+    
+    for (let i = 0; i < moods.length; i++) {
+      const moodDate = new Date(moods[i].date);
+      const daysDiff = Math.floor((currentDate.getTime() - moodDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysDiff === streak) {
+        streak++;
+        currentDate = new Date(currentDate.getTime() - (24 * 60 * 60 * 1000));
+      } else {
+        break;
+      }
+    }
+    
+    return streak;
+  };
+
+  const calculateImprovement = (scores: number[]) => {
+    if (scores.length < 2) return 0;
+    
+    const firstHalf = scores.slice(-Math.ceil(scores.length / 2));
+    const secondHalf = scores.slice(0, Math.floor(scores.length / 2));
+    
+    const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+    const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+    
+    return Math.round(((secondAvg - firstAvg) / firstAvg) * 100);
+  };
+
+  const generateAISummary = async () => {
+    if (!user || isGenerating) return;
+
+    setIsGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-summary', {
+        body: { timeRange }
+      });
+
+      if (error) {
+        console.error('Error generating summary:', error);
+        toast({
+          title: "Error",
+          description: "Failed to generate AI summary. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setAiSummary(data.summary);
+      setRecommendations(data.recommendations);
+      
+      toast({
+        title: "Summary Generated",
+        description: "Your personalized wellness summary is ready!",
+      });
+    } catch (error) {
+      console.error('Error generating summary:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate AI summary. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -105,7 +243,7 @@ export default function Summary() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Average Mood</p>
-                <p className="text-2xl font-bold">{averageMood.toFixed(1)}/10</p>
+                <p className="text-2xl font-bold">{stats.averageMood.toFixed(1)}/10</p>
               </div>
             </div>
           </CardContent>
@@ -119,7 +257,7 @@ export default function Summary() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Entries Logged</p>
-                <p className="text-2xl font-bold">34</p>
+                <p className="text-2xl font-bold">{stats.totalEntries}</p>
               </div>
             </div>
           </CardContent>
@@ -133,7 +271,7 @@ export default function Summary() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Current Streak</p>
-                <p className="text-2xl font-bold">6 days</p>
+                <p className="text-2xl font-bold">{stats.streak} days</p>
               </div>
             </div>
           </CardContent>
@@ -147,12 +285,63 @@ export default function Summary() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Improvement</p>
-                <p className="text-2xl font-bold text-emerald-500">+15%</p>
+                <p className="text-2xl font-bold text-emerald-500">{stats.improvement > 0 ? '+' : ''}{stats.improvement}%</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* AI Summary Section */}
+      {aiSummary && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Personalized AI Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm leading-relaxed">{aiSummary}</p>
+            
+            {recommendations.length > 0 && (
+              <div>
+                <h4 className="font-semibold mb-2 text-sm">Recommendations for Mental Health:</h4>
+                <ul className="space-y-2">
+                  {recommendations.map((rec, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm">
+                      <span className="flex-shrink-0 w-5 h-5 bg-primary/10 text-primary rounded-full flex items-center justify-center text-xs font-semibold">
+                        {index + 1}
+                      </span>
+                      <span>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            <Button 
+              onClick={generateAISummary} 
+              disabled={isGenerating}
+              variant="outline" 
+              size="sm"
+              className="w-full"
+            >
+              {isGenerating ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Regenerate Summary
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
