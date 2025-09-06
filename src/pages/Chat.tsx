@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
@@ -38,56 +39,58 @@ export default function Chat() {
   const sendMessage = async (content: string) => {
     if (!content.trim()) return;
 
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
-      content,
+      content: content.trim(),
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setInputValue("");
+    setInputValue('');
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const aiResponseContent = await getAIResponse(content);
+      
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: getAIResponse(content),
+        content: aiResponseContent,
         timestamp: new Date()
       };
+      
       setMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.",
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
-  const getAIResponse = (userMessage: string): string => {
-    const lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.includes('stress') || lowerMessage.includes('anxious')) {
-      return "I understand you're feeling stressed. Try this breathing exercise: Breathe in for 4 counts, hold for 4, breathe out for 6. Repeat 3 times. Remember, it's okay to feel this way, and this feeling will pass. Would you like me to guide you through a longer relaxation technique?";
-    } 
-    
-    if (lowerMessage.includes('happy') || lowerMessage.includes('good') || lowerMessage.includes('great')) {
-      return "That's wonderful to hear! I'm so glad you're feeling positive today. These good moments are precious - consider taking a moment to really savor this feeling. What specifically is making you feel good today?";
-    }
-    
-    if (lowerMessage.includes('sad') || lowerMessage.includes('down') || lowerMessage.includes('upset')) {
-      return "I'm sorry you're going through a difficult time. Your feelings are valid, and it's important to acknowledge them. Sometimes talking helps - would you like to share more about what's troubling you? Or perhaps we could explore some gentle activities that might help lift your spirits?";
-    }
-    
-    if (lowerMessage.includes('mindful') || lowerMessage.includes('meditation')) {
-      return "Mindfulness is a powerful practice! Here's a simple technique: Find a comfortable position and focus on your breath. When thoughts arise, gently acknowledge them and return your attention to breathing. Even 5 minutes can make a difference. Would you like me to guide you through a specific mindfulness exercise?";
-    }
-    
-    if (lowerMessage.includes('sleep') || lowerMessage.includes('tired')) {
-      return "Good sleep is crucial for mental health. Try establishing a bedtime routine: dim lights 1 hour before bed, avoid screens, and consider gentle stretching or reading. Creating a cool, dark environment can also help. How has your sleep been lately?";
-    }
+  const getAIResponse = async (userMessage: string): Promise<string> => {
+    try {
+      const { data, error } = await supabase.functions.invoke('chat-with-gemini', {
+        body: { message: userMessage }
+      });
 
-    // Default response
-    return "Thank you for sharing that with me. I'm here to listen and support you. Every step in your wellness journey matters, no matter how small. Is there anything specific you'd like to explore or discuss about your mental health today?";
+      if (error) {
+        console.error('Error calling Gemini:', error);
+        return "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.";
+      }
+
+      return data.response || "I'm sorry, I couldn't generate a response right now.";
+    } catch (error) {
+      console.error('Error in getAIResponse:', error);
+      return "I'm sorry, I'm having trouble connecting right now. Please try again in a moment.";
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -117,10 +120,10 @@ export default function Chat() {
             <Sparkles className="h-5 w-5 text-amber-500 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                Connect Supabase for Full AI Chat
+                Powered by Gemini AI
               </p>
               <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                This is a demo version. Connect to Supabase to enable real AI conversations with Gemini API and save your chat history.
+                Your conversations are powered by Google's Gemini AI and saved to your account for continuity.
               </p>
             </div>
           </div>
@@ -135,7 +138,7 @@ export default function Chat() {
               <CardTitle className="text-lg flex items-center gap-2">
                 <Bot className="h-5 w-5" />
                 AI Assistant
-                <Badge variant="secondary" className="ml-auto">Demo Mode</Badge>
+                <Badge variant="secondary" className="ml-auto">Gemini AI</Badge>
               </CardTitle>
             </CardHeader>
             
