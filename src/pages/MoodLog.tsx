@@ -1,82 +1,123 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { EmojiPicker } from "@/components/mood/EmojiPicker";
 import { MoodCard } from "@/components/mood/MoodCard";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, TrendingUp } from "lucide-react";
+import { ArrowLeft, Save, TrendingUp, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { moodService, type MoodLog } from "@/services/moodService";
 
 export default function MoodLog() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [selectedEmoji, setSelectedEmoji] = useState<string>("");
   const [note, setNote] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [recentMoods, setRecentMoods] = useState<MoodLog[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock recent mood entries
-  const recentMoods = [
-    {
-      id: "1",
-      emoji: "😊",
-      note: "Had a great morning coffee and feeling positive!",
-      date: new Date().toISOString().split('T')[0],
-      created_at: new Date().toISOString()
-    },
-    {
-      id: "2",
-      emoji: "😌",
-      note: "",
-      date: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString().split('T')[0],
-      created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      id: "3",
-      emoji: "🤔",
-      note: "Reflecting on yesterday's events and planning ahead",
-      date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+  useEffect(() => {
+    if (user) {
+      loadRecentMoods();
     }
-  ];
+  }, [user]);
+
+  const loadRecentMoods = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    const { data, error } = await moodService.getRecentMoods(user.id, 10);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load recent moods",
+        variant: "destructive"
+      });
+    } else if (data) {
+      setRecentMoods(data);
+    }
+    
+    setIsLoading(false);
+  };
 
   const handleMoodSelect = (emoji: string) => {
     setSelectedEmoji(emoji);
   };
 
   const handleSave = async () => {
-    if (!selectedEmoji) return;
+    if (!user || !selectedEmoji) return;
     
     setIsSaving(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Mood logged successfully! 🌱",
-      description: "Your mood has been saved to your wellness journal.",
+    const { data, error } = await moodService.createMoodLog(user.id, {
+      emoji: selectedEmoji,
+      note: note || undefined,
+      date: new Date().toISOString().split('T')[0]
     });
     
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save mood log",
+        variant: "destructive"
+      });
+    } else if (data) {
+      setRecentMoods([data, ...recentMoods]);
+      toast({
+        title: "Mood logged successfully! 🌱",
+        description: "Your mood has been saved to your wellness journal.",
+      });
+      setSelectedEmoji("");
+      setNote("");
+    }
+    
     setIsSaving(false);
-    setSelectedEmoji("");
-    setNote("");
+  };
+
+  const handleExportData = () => {
+    const dataStr = JSON.stringify(recentMoods, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `mood-logs-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Data exported!",
+      description: "Your mood logs have been downloaded."
+    });
   };
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link to="/dashboard">
-          <Button variant="ghost" size="icon" className="rounded-xl">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Mood Check-in</h1>
-          <p className="text-muted-foreground">
-            Take a moment to reflect on how you're feeling right now
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link to="/dashboard">
+            <Button variant="ghost" size="icon" className="rounded-xl">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Mood Check-in</h1>
+            <p className="text-muted-foreground">
+              Take a moment to reflect on how you're feeling right now
+            </p>
+          </div>
         </div>
+        <Button onClick={handleExportData} variant="outline" className="flex items-center gap-2">
+          <Download className="h-4 w-4" />
+          Export Data
+        </Button>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
@@ -148,9 +189,15 @@ export default function MoodLog() {
           </div>
           
           <div className="space-y-4">
-            {recentMoods.map((mood) => (
-              <MoodCard key={mood.id} entry={mood} compact />
-            ))}
+            {isLoading ? (
+              <div className="text-center text-muted-foreground">Loading recent moods...</div>
+            ) : recentMoods.length === 0 ? (
+              <div className="text-center text-muted-foreground">No mood entries yet. Log your first mood above!</div>
+            ) : (
+              recentMoods.map((mood) => (
+                <MoodCard key={mood.id} entry={mood} compact />
+              ))
+            )}
           </div>
 
           <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary hover:text-primary-foreground rounded-xl">
