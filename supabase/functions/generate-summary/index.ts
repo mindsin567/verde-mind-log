@@ -191,6 +191,16 @@ RECOMMENDATIONS:
       period: timeRange
     });
 
+    // Save recommendations to database
+    if (recommendations.length > 0) {
+      await supabase.from('airecommendations').insert({
+        user_id: user.id,
+        recommendations,
+        source: 'weekly_analysis',
+        context: `Generated from ${timeDescription} mood analysis`
+      });
+    }
+
     return new Response(JSON.stringify({ 
       summary, 
       recommendations,
