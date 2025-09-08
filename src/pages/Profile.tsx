@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, Mail, Phone, MapPin, Calendar, Edit3, Save, X, Camera } from "lucide-react";
+import { User, Mail, Phone, MapPin, Calendar, Edit3, Save, X, Camera, LogOut, Download, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface UserProfile {
   name: string;
@@ -28,8 +29,9 @@ interface UserStats {
 }
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -165,6 +167,67 @@ export default function Profile() {
   const handleInputChange = (field: keyof UserProfile, value: string) => {
     if (!editedProfile) return;
     setEditedProfile(prev => prev ? { ...prev, [field]: value } : null);
+  };
+
+  const handleExportData = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch all user data
+      const [moodLogsRes, diaryEntriesRes] = await Promise.all([
+        supabase.from('moodlogs').select('*').eq('user_id', user.id).order('date', { ascending: false }),
+        supabase.from('diaryentries').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
+      ]);
+
+      const exportData = {
+        profile,
+        moodLogs: moodLogsRes.data || [],
+        diaryEntries: diaryEntriesRes.data || [],
+        exportDate: new Date().toISOString(),
+        totalEntries: (moodLogsRes.data?.length || 0) + (diaryEntriesRes.data?.length || 0)
+      };
+
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `mindin-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Data exported!",
+        description: "Your complete MindIn data has been downloaded.",
+      });
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast({
+        title: "Export failed",
+        description: "Failed to export your data. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+      navigate('/auth');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Logout failed",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading || !profile) {
@@ -326,16 +389,25 @@ export default function Profile() {
               <CardTitle>Account Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start">
-                <Calendar className="h-4 w-4 mr-2" />
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={handleExportData}
+              >
+                <Download className="h-4 w-4 mr-2" />
                 Export Data
               </Button>
               <Button variant="outline" className="w-full justify-start">
-                <User className="h-4 w-4 mr-2" />
+                <Shield className="h-4 w-4 mr-2" />
                 Privacy Settings
               </Button>
-              <Button variant="destructive" className="w-full justify-start">
-                Delete Account
+              <Button 
+                variant="outline" 
+                className="w-full justify-start border-destructive/50 text-destructive hover:bg-destructive/10"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
               </Button>
             </CardContent>
           </Card>
