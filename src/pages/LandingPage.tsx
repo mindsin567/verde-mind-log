@@ -37,12 +37,12 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Link to="/auth">
+            <Link to="/login">
               <Button variant="ghost" className="font-medium">
                 Sign In
               </Button>
             </Link>
-            <Link to="/auth">
+            <Link to="/signup">
               <Button className="bg-primary hover:bg-primary-hover text-primary-foreground font-medium">
                 Get Started
               </Button>
@@ -70,7 +70,7 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Link to="/auth">
+            <Link to="/signup">
               <Button 
                 size="lg" 
                 className="bg-primary hover:bg-primary-hover text-primary-foreground font-semibold px-8 py-3 rounded-xl"
@@ -115,7 +115,7 @@ export default function LandingPage() {
               Join thousands of users who are taking control of their mental health 
               with MindIn's gentle, supportive approach to self-care.
             </p>
-            <Link to="/auth">
+            <Link to="/signup">
               <Button 
                 size="lg"
                 className="bg-primary hover:bg-primary-hover text-primary-foreground font-semibold px-8 py-3 rounded-xl"

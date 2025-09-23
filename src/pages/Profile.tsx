@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { User, Mail, Phone, MapPin, Calendar, Edit3, Save, X, Camera, LogOut, Download, Shield } from "lucide-react";
+import { useState } from "react";
+import { User, Mail, Phone, MapPin, Calendar, Edit3, Save, X, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,155 +8,42 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
 
 interface UserProfile {
   name: string;
   email: string;
+  phone: string;
   location: string;
   bio: string;
   joinDate: string;
   avatar: string;
 }
 
-interface UserStats {
-  totalEntries: number;
-  currentStreak: number;
-  memberSince: string;
-}
+const mockProfile: UserProfile = {
+  name: "Sarah Johnson",
+  email: "sarah.johnson@email.com", 
+  phone: "+1 (555) 123-4567",
+  location: "San Francisco, CA",
+  bio: "Passionate about mindfulness and personal growth. Love hiking, reading, and spending time in nature.",
+  joinDate: "2024-01-01",
+  avatar: "/placeholder.svg"
+};
+
+const mockStats = [
+  { label: "Total Entries", value: "47", icon: "📝" },
+  { label: "Current Streak", value: "12 days", icon: "🔥" },
+  { label: "Favorite Mood", value: "Peaceful", icon: "😌" },
+  { label: "Member Since", value: "Jan 2024", icon: "🎉" }
+];
 
 export default function Profile() {
-  const { user, signOut } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [stats, setStats] = useState<UserStats | null>(null);
+  const [profile, setProfile] = useState<UserProfile>(mockProfile);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedProfile, setEditedProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [editedProfile, setEditedProfile] = useState<UserProfile>(mockProfile);
 
-  useEffect(() => {
-    if (user) {
-      loadUserProfile();
-      loadUserStats();
-    }
-  }, [user]);
-
-  const loadUserProfile = async () => {
-    if (!user) return;
-
-    try {
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profileData) {
-        const userProfile: UserProfile = {
-          name: profileData.name || 'User',
-          email: user.email || '',
-          location: profileData.location || '',
-          bio: profileData.bio || '',
-          joinDate: profileData.created_at,
-          avatar: '/placeholder.svg'
-        };
-        setProfile(userProfile);
-        setEditedProfile(userProfile);
-      }
-    } catch (error) {
-      console.error('Error loading profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadUserStats = async () => {
-    if (!user) return;
-
-    try {
-      // Get mood logs count
-      const { count: moodCount } = await supabase
-        .from('moodlogs')
-        .select('*', { count: 'exact' })
-        .eq('user_id', user.id);
-
-      // Get diary entries count
-      const { count: diaryCount } = await supabase
-        .from('diaryentries')
-        .select('*', { count: 'exact' })
-        .eq('user_id', user.id);
-
-      // Calculate current streak
-      const { data: recentLogs } = await supabase
-        .from('moodlogs')
-        .select('date')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false })
-        .limit(30);
-
-      let streak = 0;
-      if (recentLogs && recentLogs.length > 0) {
-        const today = new Date();
-        let currentDate = new Date(today);
-        
-        for (const log of recentLogs) {
-          const logDate = new Date(log.date);
-          const daysDiff = Math.floor((currentDate.getTime() - logDate.getTime()) / (1000 * 60 * 60 * 24));
-          
-          if (daysDiff === streak) {
-            streak++;
-            currentDate = new Date(currentDate.getTime() - (24 * 60 * 60 * 1000));
-          } else {
-            break;
-          }
-        }
-      }
-
-      setStats({
-        totalEntries: (moodCount || 0) + (diaryCount || 0),
-        currentStreak: streak,
-        memberSince: user.created_at
-      });
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!user || !editedProfile) return;
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          name: editedProfile.name,
-          location: editedProfile.location,
-          bio: editedProfile.bio
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      setProfile(editedProfile);
-      setIsEditing(false);
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
-      });
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update profile. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleSave = () => {
+    setProfile(editedProfile);
+    setIsEditing(false);
   };
 
   const handleCancel = () => {
@@ -165,74 +52,8 @@ export default function Profile() {
   };
 
   const handleInputChange = (field: keyof UserProfile, value: string) => {
-    if (!editedProfile) return;
-    setEditedProfile(prev => prev ? { ...prev, [field]: value } : null);
+    setEditedProfile(prev => ({ ...prev, [field]: value }));
   };
-
-  const handleExportData = async () => {
-    if (!user) return;
-
-    try {
-      // Fetch all user data
-      const [moodLogsRes, diaryEntriesRes] = await Promise.all([
-        supabase.from('moodlogs').select('*').eq('user_id', user.id).order('date', { ascending: false }),
-        supabase.from('diaryentries').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
-      ]);
-
-      const exportData = {
-        profile,
-        moodLogs: moodLogsRes.data || [],
-        diaryEntries: diaryEntriesRes.data || [],
-        exportDate: new Date().toISOString(),
-        totalEntries: (moodLogsRes.data?.length || 0) + (diaryEntriesRes.data?.length || 0)
-      };
-
-      const dataStr = JSON.stringify(exportData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `mindin-data-export-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      toast({
-        title: "Data exported!",
-        description: "Your complete MindIn data has been downloaded.",
-      });
-    } catch (error) {
-      console.error('Error exporting data:', error);
-      toast({
-        title: "Export failed",
-        description: "Failed to export your data. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      });
-      navigate('/auth');
-    } catch (error) {
-      console.error('Error signing out:', error);
-      toast({
-        title: "Logout failed",
-        description: "Failed to log out. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (loading || !profile) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>;
-  }
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -315,12 +136,39 @@ export default function Profile() {
             <Separator />
 
             {/* Contact Information */}
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{profile.email}</span>
+                  {isEditing ? (
+                    <Input
+                      id="email"
+                      type="email"
+                      value={editedProfile.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      className="flex-1"
+                    />
+                  ) : (
+                    <span className="text-sm">{profile.email}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  {isEditing ? (
+                    <Input
+                      id="phone"
+                      value={editedProfile.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      className="flex-1"
+                    />
+                  ) : (
+                    <span className="text-sm">{profile.phone}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -332,12 +180,12 @@ export default function Profile() {
                 {isEditing ? (
                   <Input
                     id="location"
-                    value={editedProfile?.location || ''}
+                    value={editedProfile.location}
                     onChange={(e) => handleInputChange('location', e.target.value)}
                     className="flex-1"
                   />
                 ) : (
-                  <span className="text-sm">{profile.location || 'Not specified'}</span>
+                  <span className="text-sm">{profile.location}</span>
                 )}
               </div>
             </div>
@@ -347,12 +195,12 @@ export default function Profile() {
               {isEditing ? (
                 <Textarea
                   id="bio"
-                  value={editedProfile?.bio || ''}
+                  value={editedProfile.bio}
                   onChange={(e) => handleInputChange('bio', e.target.value)}
                   placeholder="Tell us a bit about yourself..."
                 />
               ) : (
-                <p className="text-sm text-muted-foreground">{profile.bio || 'No bio added yet'}</p>
+                <p className="text-sm text-muted-foreground">{profile.bio}</p>
               )}
             </div>
           </CardContent>
@@ -365,11 +213,7 @@ export default function Profile() {
               <CardTitle>Your Stats</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {stats && [
-                { label: "Total Entries", value: stats.totalEntries.toString(), icon: "📝" },
-                { label: "Current Streak", value: `${stats.currentStreak} days`, icon: "🔥" },
-                { label: "Member Since", value: new Date(stats.memberSince).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }), icon: "🎉" }
-              ].map((stat, index) => (
+              {mockStats.map((stat, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
                     <span className="text-lg">{stat.icon}</span>
@@ -389,25 +233,16 @@ export default function Profile() {
               <CardTitle>Account Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={handleExportData}
-              >
-                <Download className="h-4 w-4 mr-2" />
+              <Button variant="outline" className="w-full justify-start">
+                <Calendar className="h-4 w-4 mr-2" />
                 Export Data
               </Button>
               <Button variant="outline" className="w-full justify-start">
-                <Shield className="h-4 w-4 mr-2" />
+                <User className="h-4 w-4 mr-2" />
                 Privacy Settings
               </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start border-destructive/50 text-destructive hover:bg-destructive/10"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
+              <Button variant="destructive" className="w-full justify-start">
+                Delete Account
               </Button>
             </CardContent>
           </Card>
