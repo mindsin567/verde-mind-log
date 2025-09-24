@@ -9,3 +9,6 @@ max_rows = 1000
 
 [functions.chat-with-gemini]
 verify_jwt = false
+
+[functions.generate-summary]
+verify_jwt = false
