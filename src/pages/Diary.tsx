@@ -124,118 +124,131 @@ export default function Diary() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-xl">
-            <BookOpen className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Personal Diary</h1>
-            <p className="text-muted-foreground">Capture your thoughts and memories</p>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-wellness-focus to-wellness-calm/30">
+      <div className="max-w-6xl mx-auto p-4 space-y-8">
+        {/* Header */}
+        <div className="wellness-card border-0 bg-card/80 backdrop-blur-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-primary to-primary-hover rounded-2xl shadow-lg">
+                <BookOpen className="h-8 w-8 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+                  Personal Diary
+                </h1>
+                <p className="text-muted-foreground text-lg">Capture your thoughts and memories</p>
+              </div>
+            </div>
 
-        <div className="flex gap-2">
-          <Button onClick={handleExportData} variant="outline" className="flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            Export Data
-          </Button>
-          <Dialog open={isNewEntryOpen} onOpenChange={setIsNewEntryOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                New Entry
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleExportData} 
+                variant="outline" 
+                className="flex items-center gap-2 bg-background/50 hover:bg-background/80 border-primary/20 hover:border-primary/40"
+              >
+                <Download className="h-4 w-4" />
+                Export Data
               </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Create New Diary Entry</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  placeholder="Give your entry a title..."
-                  value={newEntry.title}
-                  onChange={(e) => setNewEntry(prev => ({ ...prev, title: e.target.value }))}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="content">Your Thoughts</Label>
-                <Textarea
-                  id="content"
-                  placeholder="What's on your mind today..."
-                  className="min-h-[200px]"
-                  value={newEntry.content}
-                  onChange={(e) => setNewEntry(prev => ({ ...prev, content: e.target.value }))}
-                />
-              </div>
+              <Dialog open={isNewEntryOpen} onOpenChange={setIsNewEntryOpen}>
+                <DialogTrigger asChild>
+                  <Button className="flex items-center gap-2 bg-gradient-to-r from-primary to-primary-hover hover:from-primary-hover hover:to-primary shadow-lg">
+                    <Plus className="h-4 w-4" />
+                    New Entry
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl border-0 bg-card/95 backdrop-blur-md">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-semibold">Create New Diary Entry</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="title" className="text-sm font-medium">Title</Label>
+                      <Input
+                        id="title"
+                        placeholder="Give your entry a title..."
+                        value={newEntry.title}
+                        onChange={(e) => setNewEntry(prev => ({ ...prev, title: e.target.value }))}
+                        className="bg-background/50 border-primary/20 focus:border-primary/40"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="content" className="text-sm font-medium">Your Thoughts</Label>
+                      <Textarea
+                        id="content"
+                        placeholder="What's on your mind today..."
+                        className="min-h-[200px] bg-background/50 border-primary/20 focus:border-primary/40 resize-none"
+                        value={newEntry.content}
+                        onChange={(e) => setNewEntry(prev => ({ ...prev, content: e.target.value }))}
+                      />
+                    </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="mood">Current Mood</Label>
-                  <Input
-                    id="mood"
-                    placeholder="How are you feeling?"
-                    value={newEntry.mood}
-                    onChange={(e) => setNewEntry(prev => ({ ...prev, mood: e.target.value }))}
-                  />
-                </div>
-              </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="mood" className="text-sm font-medium">Current Mood</Label>
+                      <Input
+                        id="mood"
+                        placeholder="How are you feeling?"
+                        value={newEntry.mood}
+                        onChange={(e) => setNewEntry(prev => ({ ...prev, mood: e.target.value }))}
+                        className="bg-background/50 border-primary/20 focus:border-primary/40"
+                      />
+                    </div>
 
-              <div className="flex gap-2 pt-4">
-                <Button onClick={handleCreateEntry} disabled={!newEntry.title || !newEntry.content || isSaving}>
-                  {isSaving ? "Creating..." : "Create Entry"}
-                </Button>
-                <Button variant="outline" onClick={() => setIsNewEntryOpen(false)}>
-                  Cancel
-                </Button>
-              </div>
+                    <div className="flex gap-3 pt-4">
+                      <Button 
+                        onClick={handleCreateEntry} 
+                        disabled={!newEntry.title || !newEntry.content || isSaving}
+                        className="bg-gradient-to-r from-primary to-primary-hover hover:from-primary-hover hover:to-primary"
+                      >
+                        {isSaving ? "Creating..." : "Create Entry"}
+                      </Button>
+                      <Button variant="outline" onClick={() => setIsNewEntryOpen(false)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
-            </DialogContent>
-          </Dialog>
+          </div>
         </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <Input
-          placeholder="Search your entries..."
-          className="pl-10"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+        {/* Search */}
+        <div className="wellness-card border-0 bg-card/60 backdrop-blur-sm">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+            <Input
+              placeholder="Search your entries..."
+              className="pl-12 h-12 bg-background/50 border-primary/20 focus:border-primary/40 text-base"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <BookOpen className="h-4 w-4 text-primary" />
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="wellness-card border-0 bg-gradient-to-br from-primary/5 to-primary/10 hover:from-primary/10 hover:to-primary/15">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-primary to-primary-hover rounded-xl shadow-md">
+                <BookOpen className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Entries</p>
-                <p className="text-2xl font-bold">{entries.length}</p>
+                <p className="text-sm text-muted-foreground font-medium">Total Entries</p>
+                <p className="text-3xl font-bold text-foreground">{entries.length}</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-secondary/10 rounded-lg">
-                <Calendar className="h-4 w-4 text-secondary" />
+          <div className="wellness-card border-0 bg-gradient-to-br from-wellness-focus to-accent/20 hover:from-wellness-focus hover:to-accent/30">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-accent to-accent/80 rounded-xl shadow-md">
+                <Calendar className="h-6 w-6 text-accent-foreground" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">This Month</p>
-                <p className="text-2xl font-bold">
+                <p className="text-sm text-muted-foreground font-medium">This Month</p>
+                <p className="text-3xl font-bold text-foreground">
                   {entries.filter(entry => {
                     const entryDate = new Date(entry.created_at);
                     const now = new Date();
@@ -244,89 +257,105 @@ export default function Diary() {
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-accent/10 rounded-lg">
-                <Edit3 className="h-4 w-4 text-accent" />
+          <div className="wellness-card border-0 bg-gradient-to-br from-wellness-warm to-warning/10 hover:from-wellness-warm hover:to-warning/20">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-warning to-warning/80 rounded-xl shadow-md">
+                <Edit3 className="h-6 w-6 text-warning-foreground" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Words</p>
-                <p className="text-2xl font-bold">
+                <p className="text-sm text-muted-foreground font-medium">Total Words</p>
+                <p className="text-3xl font-bold text-foreground">
                   {entries.reduce((total, entry) => total + entry.word_count, 0)}
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
 
-      {/* Entries */}
-      <div className="space-y-4">
-        {isLoading ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <p className="text-muted-foreground">Loading your entries...</p>
-            </CardContent>
-          </Card>
-        ) : filteredEntries.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No entries found</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchTerm ? "Try adjusting your search terms" : "Start your journaling journey today"}
-              </p>
-              {!searchTerm && (
-                <Button onClick={() => setIsNewEntryOpen(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Entry
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          filteredEntries.map((entry) => (
-            <Card key={entry.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="text-lg">{entry.title}</CardTitle>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>{new Date(entry.created_at).toLocaleDateString()}</span>
-                      {entry.mood && (
-                        <Badge variant="secondary" className="text-xs">
-                          {entry.mood}
-                        </Badge>
-                      )}
-                      <Badge variant="outline" className="text-xs">
-                        {entry.word_count} words
-                      </Badge>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteEntry(entry.id)}
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+        {/* Entries */}
+        <div className="space-y-6">
+          {isLoading ? (
+            <div className="wellness-card border-0 bg-card/60 backdrop-blur-sm">
+              <div className="p-12 text-center">
+                <div className="animate-pulse space-y-4">
+                  <div className="w-8 h-8 bg-primary/20 rounded-full mx-auto"></div>
+                  <p className="text-muted-foreground">Loading your entries...</p>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-3 leading-relaxed">
-                  {entry.content.length > 200 ? `${entry.content.substring(0, 200)}...` : entry.content}
-                </p>
-              </CardContent>
-            </Card>
-          ))
-         )}
-       </div>
-       </div>
-     </div>
-   );
- }
+              </div>
+            </div>
+          ) : filteredEntries.length === 0 ? (
+            <div className="wellness-card border-0 bg-gradient-to-br from-card/80 to-wellness-calm/20 backdrop-blur-sm">
+              <div className="p-12 text-center space-y-6">
+                <div className="p-4 bg-primary/10 rounded-2xl w-fit mx-auto">
+                  <BookOpen className="h-16 w-16 text-primary mx-auto" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">No entries found</h3>
+                  <p className="text-muted-foreground text-lg">
+                    {searchTerm ? "Try adjusting your search terms" : "Start your journaling journey today"}
+                  </p>
+                </div>
+                {!searchTerm && (
+                  <Button 
+                    onClick={() => setIsNewEntryOpen(true)}
+                    className="bg-gradient-to-r from-primary to-primary-hover hover:from-primary-hover hover:to-primary shadow-lg"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Your First Entry
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            filteredEntries.map((entry) => (
+              <div key={entry.id} className="wellness-card border-0 bg-gradient-to-br from-card/90 to-card/60 backdrop-blur-sm hover:from-card hover:to-card/80 group">
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-3 flex-1">
+                      <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {entry.title}
+                      </h3>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <Badge variant="outline" className="bg-background/50 border-primary/20">
+                          {new Date(entry.created_at).toLocaleDateString('en-US', { 
+                            weekday: 'short',
+                            month: 'short', 
+                            day: 'numeric',
+                            year: 'numeric'
+                          })}
+                        </Badge>
+                        {entry.mood && (
+                          <Badge className="bg-gradient-to-r from-wellness-calm to-accent/50 text-accent-foreground">
+                            {entry.mood}
+                          </Badge>
+                        )}
+                        <Badge variant="secondary" className="bg-muted/50 text-muted-foreground">
+                          {entry.word_count} words
+                        </Badge>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteEntry(entry.id)}
+                      className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="border-t border-border/50 pt-4">
+                    <p className="text-muted-foreground leading-relaxed text-base">
+                      {entry.content.length > 250 ? `${entry.content.substring(0, 250)}...` : entry.content}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
