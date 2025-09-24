@@ -11,51 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { moodService } from "@/services/moodService";
 
-// Mock data for charts and statistics
-const weeklyMoodData = [
-  { day: 'Mon', mood: 'Happy', score: 8 },
-  { day: 'Tue', mood: 'Content', score: 7 },
-  { day: 'Wed', mood: 'Stressed', score: 4 },
-  { day: 'Thu', mood: 'Peaceful', score: 9 },
-  { day: 'Fri', mood: 'Excited', score: 8 },
-  { day: 'Sat', mood: 'Relaxed', score: 9 },
-  { day: 'Sun', mood: 'Happy', score: 8 }
-];
-
-const moodDistribution = [
-  { mood: 'Happy', count: 12, percentage: 35, color: '#10B981' },
-  { mood: 'Peaceful', count: 8, percentage: 24, color: '#3B82F6' },
-  { mood: 'Content', count: 7, percentage: 21, color: '#8B5CF6' },
-  { mood: 'Excited', count: 4, percentage: 12, color: '#F59E0B' },
-  { mood: 'Stressed', count: 3, percentage: 8, color: '#EF4444' }
-];
-
-const insights = [
-  {
-    title: "Mood Improvement",
-    description: "Your average mood increased by 15% this month",
-    type: "positive",
-    icon: TrendingUp
-  },
-  {
-    title: "Consistency Win",
-    description: "You've logged your mood 6 days in a row",
-    type: "streak",
-    icon: Award
-  },
-  {
-    title: "Peak Hours",
-    description: "You feel happiest in the morning (8-10 AM)",
-    type: "insight",
-    icon: Activity
-  },
-  {
-    title: "Stress Pattern",
-    description: "Stress levels tend to be higher on Wednesdays",
-    type: "warning",
-    icon: BarChart3
-  }
-];
 
 export default function Summary() {
   const [timeRange, setTimeRange] = useState("7d");
@@ -292,21 +247,24 @@ export default function Summary() {
         </Card>
       </div>
 
-      {/* AI Summary Section */}
+      {/* AI Recommendations Section */}
       {aiSummary && (
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              Personalized AI Summary
+              AI Recommendations
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm leading-relaxed">{aiSummary}</p>
+            <div>
+              <h4 className="font-semibold mb-2 text-sm">Brief Summary:</h4>
+              <p className="text-sm leading-relaxed mb-4">{aiSummary}</p>
+            </div>
             
             {recommendations.length > 0 && (
               <div>
-                <h4 className="font-semibold mb-2 text-sm">Recommendations for Mental Health:</h4>
+                <h4 className="font-semibold mb-2 text-sm">Personalized Recommendations:</h4>
                 <ul className="space-y-2">
                   {recommendations.map((rec, index) => (
                     <li key={index} className="flex items-start gap-2 text-sm">
@@ -335,7 +293,33 @@ export default function Summary() {
               ) : (
                 <>
                   <Sparkles className="h-4 w-4 mr-2" />
-                  Regenerate Summary
+                  Generate New Recommendations
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Generate button for users without summary */}
+      {!aiSummary && user && stats.totalEntries > 0 && (
+        <Card className="border-dashed">
+          <CardContent className="p-6 text-center">
+            <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Get Your AI Recommendations</h3>
+            <p className="text-muted-foreground mb-4">
+              Generate personalized mental health recommendations based on your mood logs and diary entries.
+            </p>
+            <Button onClick={generateAISummary} disabled={isGenerating}>
+              {isGenerating ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Generate Recommendations
                 </>
               )}
             </Button>
@@ -352,59 +336,79 @@ export default function Summary() {
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Weekly Mood Chart */}
+            {/* Recent Mood Logs */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
-                  Weekly Mood Trend
+                  Recent Mood Logs
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {weeklyMoodData.map((day) => (
-                    <div key={day.day} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium w-8">{day.day}</span>
+                {moodLogs.length > 0 ? (
+                  <div className="space-y-3">
+                    {moodLogs.slice(0, 7).map((log, index) => (
+                      <div key={log.id} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium w-12">
+                            {new Date(log.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                          </span>
+                          <span className="text-lg">{log.emoji}</span>
+                          {log.note && (
+                            <span className="text-xs text-muted-foreground truncate max-w-[150px]">
+                              {log.note}
+                            </span>
+                          )}
+                        </div>
                         <Badge variant="outline" className="text-xs">
-                          {day.mood}
+                          {new Date(log.date).toLocaleDateString()}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Progress value={day.score * 10} className="w-20" />
-                        <span className="text-sm text-muted-foreground w-8">{day.score}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Smile className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No mood logs yet</p>
+                    <p className="text-sm text-muted-foreground">Start tracking your mood to see insights here</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Mood Distribution */}
+            {/* User Statistics */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <PieChart className="h-5 w-5" />
-                  Mood Distribution
+                  Your Progress
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {moodDistribution.map((item) => (
-                    <div key={item.mood} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div 
-                          className="w-3 h-3 rounded-full" 
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <span className="text-sm font-medium">{item.mood}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Progress value={item.percentage} className="w-16" />
-                        <span className="text-sm text-muted-foreground w-8">{item.count}</span>
-                      </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Mood Tracking Consistency</span>
+                      <span>{stats.totalEntries > 0 ? Math.min(100, (stats.totalEntries / parseInt(timeRange.replace('d', '')) * 100)).toFixed(0) : 0}%</span>
                     </div>
-                  ))}
+                    <Progress value={stats.totalEntries > 0 ? Math.min(100, (stats.totalEntries / parseInt(timeRange.replace('d', '')) * 100)) : 0} />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Current Streak</span>
+                      <span>{stats.streak} days</span>
+                    </div>
+                    <Progress value={Math.min(100, stats.streak * 10)} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Average Mood Score</span>
+                      <span>{stats.averageMood.toFixed(1)}/10</span>
+                    </div>
+                    <Progress value={stats.averageMood * 10} />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -419,30 +423,46 @@ export default function Summary() {
               </CardHeader>
               <CardContent>
                 <div className="text-center space-y-4">
-                  <div className="text-4xl font-bold text-primary">87%</div>
-                  <p className="text-muted-foreground">Goal Completion Rate</p>
-                  <Progress value={87} className="w-full" />
+                  <div className="text-4xl font-bold text-primary">
+                    {stats.totalEntries > 0 ? Math.round((stats.totalEntries / parseInt(timeRange.replace('d', '')) * 100)) : 0}%
+                  </div>
+                  <p className="text-muted-foreground">Mood Tracking Completion</p>
+                  <Progress value={stats.totalEntries > 0 ? Math.min(100, (stats.totalEntries / parseInt(timeRange.replace('d', '')) * 100)) : 0} className="w-full" />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Best Day Patterns</CardTitle>
+                <CardTitle>Your Patterns</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Saturday</span>
-                  <Badge>Best Day</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Morning (8-10 AM)</span>
-                  <Badge variant="secondary">Peak Hours</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">After Exercise</span>
-                  <Badge variant="secondary">Mood Booster</Badge>
-                </div>
+                {stats.streak > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Current Streak</span>
+                    <Badge>{stats.streak} days</Badge>
+                  </div>
+                )}
+                {stats.averageMood > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Average Mood</span>
+                    <Badge variant="secondary">{stats.averageMood.toFixed(1)}/10</Badge>
+                  </div>
+                )}
+                {stats.improvement !== 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Mood Trend</span>
+                    <Badge variant={stats.improvement > 0 ? "default" : "secondary"}>
+                      {stats.improvement > 0 ? "+" : ""}{stats.improvement}%
+                    </Badge>
+                  </div>
+                )}
+                {stats.totalEntries === 0 && (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground text-sm">No data available yet</p>
+                    <p className="text-muted-foreground text-xs">Start logging your mood to see patterns</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -450,34 +470,73 @@ export default function Summary() {
 
         <TabsContent value="insights" className="space-y-6">
           <div className="grid gap-4">
-            {insights.map((insight, index) => (
-              <Card key={index}>
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    <div className={`p-2 rounded-lg ${
-                      insight.type === 'positive' ? 'bg-emerald-500/10' :
-                      insight.type === 'streak' ? 'bg-amber-500/10' :
-                      insight.type === 'warning' ? 'bg-red-500/10' :
-                      'bg-primary/10'
-                    }`}>
-                      <insight.icon className={`h-5 w-5 ${
-                        insight.type === 'positive' ? 'text-emerald-500' :
-                        insight.type === 'streak' ? 'text-amber-500' :
-                        insight.type === 'warning' ? 'text-red-500' :
-                        'text-primary'
-                      }`} />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{insight.title}</h3>
-                      <p className="text-sm text-muted-foreground">{insight.description}</p>
-                    </div>
-                    <Button variant="ghost" size="sm">
-                      Learn More
-                    </Button>
-                  </div>
+            {stats.totalEntries > 0 ? (
+              <>
+                {stats.improvement > 0 && (
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        <div className="p-2 rounded-lg bg-emerald-500/10">
+                          <TrendingUp className="h-5 w-5 text-emerald-500" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold">Mood Improvement</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Your mood has improved by {stats.improvement}% over the selected period
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {stats.streak > 0 && (
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        <div className="p-2 rounded-lg bg-amber-500/10">
+                          <Award className="h-5 w-5 text-amber-500" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold">Consistency Achievement</h3>
+                          <p className="text-sm text-muted-foreground">
+                            You've been tracking your mood for {stats.streak} consecutive days
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {stats.averageMood >= 7 && (
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-4">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <Activity className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold">Positive Wellbeing</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Your average mood score of {stats.averageMood.toFixed(1)} indicates good mental wellbeing
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Insights Yet</h3>
+                  <p className="text-muted-foreground">
+                    Start logging your mood regularly to see personalized insights about your mental health patterns.
+                  </p>
                 </CardContent>
               </Card>
-            ))}
+            )}
           </div>
         </TabsContent>
       </Tabs>
