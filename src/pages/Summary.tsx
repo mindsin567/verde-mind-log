@@ -253,12 +253,12 @@ export default function Summary() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              AI Recommendations
+              Recommendations
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <h4 className="font-semibold mb-2 text-sm">Brief Summary:</h4>
+              <h4 className="font-semibold mb-2 text-sm">Weekly Summary:</h4>
               <p className="text-sm leading-relaxed mb-4">{aiSummary}</p>
             </div>
             
@@ -306,9 +306,9 @@ export default function Summary() {
         <Card className="border-dashed">
           <CardContent className="p-6 text-center">
             <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Get Your AI Recommendations</h3>
+            <h3 className="text-lg font-semibold mb-2">Get Your Weekly Recommendations</h3>
             <p className="text-muted-foreground mb-4">
-              Generate personalized mental health recommendations based on your mood logs and diary entries.
+              Generate personalized weekly mental health recommendations based on your mood logs from Monday to Sunday.
             </p>
             <Button onClick={generateAISummary} disabled={isGenerating}>
               {isGenerating ? (

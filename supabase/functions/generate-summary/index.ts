@@ -41,15 +41,25 @@ serve(async (req) => {
 
     console.log('Generating summary for user:', user.id, 'timeRange:', timeRange);
 
-    // Calculate date range
+    // Calculate date range - for weekly analysis, get Monday to Sunday
     const now = new Date();
-    let daysBack = 7;
-    switch (timeRange) {
-      case '30d': daysBack = 30; break;
-      case '90d': daysBack = 90; break;
-      case '1y': daysBack = 365; break;
+    let startDate: Date;
+    
+    if (timeRange === '7d') {
+      // Get the Monday of current week
+      const dayOfWeek = now.getDay();
+      const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday = 0, so need to go back 6 days
+      startDate = new Date(now.getTime() - (daysToMonday * 24 * 60 * 60 * 1000));
+      startDate.setHours(0, 0, 0, 0); // Start of Monday
+    } else {
+      let daysBack = 7;
+      switch (timeRange) {
+        case '30d': daysBack = 30; break;
+        case '90d': daysBack = 90; break;
+        case '1y': daysBack = 365; break;
+      }
+      startDate = new Date(now.getTime() - (daysBack * 24 * 60 * 60 * 1000));
     }
-    const startDate = new Date(now.getTime() - (daysBack * 24 * 60 * 60 * 1000));
 
     // Fetch user's mood logs
     const { data: moodLogs } = await supabase
@@ -68,28 +78,55 @@ serve(async (req) => {
       .order('created_at', { ascending: false })
       .limit(10);
 
-    // Prepare data summary for AI
-    const moodSummary = moodLogs?.map(log => `${log.date}: ${log.emoji} (${log.note || 'no note'})`).join('\n') || 'No mood logs found';
+    // Prepare weekly analysis data for AI
+    const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    let weeklyAnalysis = '';
+    
+    if (timeRange === '7d' && moodLogs && moodLogs.length > 0) {
+      // Create day-by-day analysis for the week
+      const weeklyMoods: { [key: string]: any } = {};
+      moodLogs.forEach(log => {
+        const logDate = new Date(log.date);
+        const dayName = weekDays[logDate.getDay() === 0 ? 6 : logDate.getDay() - 1]; // Adjust for Monday start
+        weeklyMoods[dayName] = { emoji: log.emoji, note: log.note };
+      });
+      
+      weeklyAnalysis = weekDays.map(day => {
+        const dayMood = weeklyMoods[day];
+        return `${day}: ${dayMood ? `${dayMood.emoji} ${dayMood.note ? `(${dayMood.note})` : ''}` : 'No mood logged'}`;
+      }).join('\n');
+    } else {
+      weeklyAnalysis = moodLogs?.map(log => `${log.date}: ${log.emoji} (${log.note || 'no note'})`).join('\n') || 'No mood logs found';
+    }
+    
     const diarySummary = diaryEntries?.map(entry => `${entry.title}: ${entry.content.substring(0, 200)}...`).join('\n') || 'No diary entries found';
 
-    const prompt = `Based on the following user's mental health data from the last ${timeRange}, generate a personalized wellness summary (60-100 words) followed by exactly 3 specific, actionable recommendations for improving mental health.
+    const timeDescription = timeRange === '7d' ? 'this week (Monday to Sunday)' : `the last ${timeRange}`;
+    
+    const prompt = `Based on the following user's mental health data from ${timeDescription}, provide a brief analysis and recommendations:
 
-Mood Logs:
-${moodSummary}
+Weekly Mood Pattern:
+${weeklyAnalysis}
 
-Diary Entries:
+Recent Diary Entries:
 ${diarySummary}
 
 Please provide:
-1. A personalized summary (60-100 words) of their mental health patterns and progress
-2. Exactly 3 specific, actionable recommendations for improving their mental health
+1. A brief summary (60-100 words) analyzing their weekly mood patterns, emotional trends, and overall mental wellbeing
+2. Exactly 3 specific, actionable recommendations to improve their mental health based on the patterns you observe
+
+Focus on:
+- Overall mood consistency throughout the week
+- Any patterns or trends you notice
+- Days with better/worse moods
+- Practical, personalized suggestions
 
 Format your response as:
-SUMMARY: [your 60-100 word summary]
+SUMMARY: [your 60-100 word analysis of their weekly mental health patterns]
 RECOMMENDATIONS:
-1. [first recommendation]
-2. [second recommendation]
-3. [third recommendation]`;
+1. [first specific recommendation]
+2. [second specific recommendation] 
+3. [third specific recommendation]`;
 
     // Call Gemini API
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
