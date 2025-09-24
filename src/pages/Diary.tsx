@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Calendar, Plus, Search, BookOpen, Edit3, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Calendar, Plus, Search, BookOpen, Edit3, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,53 +7,48 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-
-interface DiaryEntry {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  mood?: string;
-  word_count: number;
-}
-
-// Mock data
-const mockEntries: DiaryEntry[] = [
-  {
-    id: "1",
-    title: "A Peaceful Morning",
-    content: "Started my day with meditation and felt incredibly centered. The sunrise was beautiful and I felt grateful for this moment of tranquility...",
-    created_at: "2024-01-15T10:00:00Z",
-    mood: "Peaceful",
-    word_count: 25
-  },
-  {
-    id: "2", 
-    title: "Challenging Day at Work",
-    content: "Today was tough with multiple deadlines. However, I managed to stay focused and complete everything on time. Feeling proud of my resilience...",
-    created_at: "2024-01-14T18:00:00Z",
-    mood: "Determined",
-    word_count: 28
-  },
-  {
-    id: "3",
-    title: "Quality Time with Family",
-    content: "Spent the evening with loved ones. We cooked dinner together and shared stories. These moments remind me what truly matters in life...",
-    created_at: "2024-01-13T20:00:00Z",
-    mood: "Joyful",
-    word_count: 26
-  }
-];
+import { useAuth } from "@/contexts/AuthContext";
+import { diaryService, type DiaryEntry } from "@/services/diaryService";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Diary() {
-  const [entries, setEntries] = useState<DiaryEntry[]>(mockEntries);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isNewEntryOpen, setIsNewEntryOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [newEntry, setNewEntry] = useState({
     title: "",
     content: "",
     mood: ""
   });
+
+  useEffect(() => {
+    if (user) {
+      loadEntries();
+    }
+  }, [user]);
+
+  const loadEntries = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    const { data, error } = await diaryService.getDiaryEntries(user.id);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load diary entries",
+        variant: "destructive"
+      });
+    } else if (data) {
+      setEntries(data);
+    }
+    
+    setIsLoading(false);
+  };
 
   const filteredEntries = entries.filter(entry => 
     entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -61,25 +56,71 @@ export default function Diary() {
     (entry.mood && entry.mood.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleCreateEntry = () => {
-    if (newEntry.title && newEntry.content) {
-      const wordCount = newEntry.content.split(/\s+/).filter(word => word.length > 0).length;
-      const entry: DiaryEntry = {
-        id: Date.now().toString(),
-        title: newEntry.title,
-        content: newEntry.content,
-        created_at: new Date().toISOString(),
-        mood: newEntry.mood,
-        word_count: wordCount
-      };
-      setEntries([entry, ...entries]);
+  const handleCreateEntry = async () => {
+    if (!user || !newEntry.title || !newEntry.content) return;
+    
+    setIsSaving(true);
+    const { data, error } = await diaryService.createDiaryEntry(user.id, {
+      title: newEntry.title,
+      content: newEntry.content,
+      mood: newEntry.mood || undefined
+    });
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save diary entry",
+        variant: "destructive"
+      });
+    } else if (data) {
+      setEntries([data, ...entries]);
       setNewEntry({ title: "", content: "", mood: "" });
       setIsNewEntryOpen(false);
+      toast({
+        title: "Entry saved!",
+        description: "Your diary entry has been saved successfully."
+      });
+    }
+    
+    setIsSaving(false);
+  };
+
+  const handleDeleteEntry = async (id: string) => {
+    if (!user) return;
+    
+    const { error } = await diaryService.deleteDiaryEntry(user.id, id);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete diary entry",
+        variant: "destructive"
+      });
+    } else {
+      setEntries(entries.filter(entry => entry.id !== id));
+      toast({
+        title: "Entry deleted",
+        description: "Your diary entry has been deleted."
+      });
     }
   };
 
-  const handleDeleteEntry = (id: string) => {
-    setEntries(entries.filter(entry => entry.id !== id));
+  const handleExportData = () => {
+    const dataStr = JSON.stringify(entries, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `diary-entries-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Data exported!",
+      description: "Your diary entries have been downloaded."
+    });
   };
 
   return (
@@ -96,14 +137,19 @@ export default function Diary() {
           </div>
         </div>
 
-        <Dialog open={isNewEntryOpen} onOpenChange={setIsNewEntryOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              New Entry
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+        <div className="flex gap-2">
+          <Button onClick={handleExportData} variant="outline" className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Export Data
+          </Button>
+          <Dialog open={isNewEntryOpen} onOpenChange={setIsNewEntryOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                New Entry
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create New Diary Entry</DialogTitle>
             </DialogHeader>
@@ -142,17 +188,17 @@ export default function Diary() {
               </div>
 
               <div className="flex gap-2 pt-4">
-                <Button onClick={handleCreateEntry} disabled={!newEntry.title || !newEntry.content}>
-                  Create Entry
+                <Button onClick={handleCreateEntry} disabled={!newEntry.title || !newEntry.content || isSaving}>
+                  {isSaving ? "Creating..." : "Create Entry"}
                 </Button>
                 <Button variant="outline" onClick={() => setIsNewEntryOpen(false)}>
                   Cancel
                 </Button>
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </DialogContent>
+          </Dialog>
+        </div>
 
       {/* Search */}
       <div className="relative">
@@ -189,7 +235,13 @@ export default function Diary() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">This Month</p>
-                <p className="text-2xl font-bold">8</p>
+                <p className="text-2xl font-bold">
+                  {entries.filter(entry => {
+                    const entryDate = new Date(entry.created_at);
+                    const now = new Date();
+                    return entryDate.getMonth() === now.getMonth() && entryDate.getFullYear() === now.getFullYear();
+                  }).length}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -202,8 +254,10 @@ export default function Diary() {
                 <Edit3 className="h-4 w-4 text-accent" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Streak</p>
-                <p className="text-2xl font-bold">5 days</p>
+                <p className="text-sm text-muted-foreground">Total Words</p>
+                <p className="text-2xl font-bold">
+                  {entries.reduce((total, entry) => total + entry.word_count, 0)}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -212,7 +266,13 @@ export default function Diary() {
 
       {/* Entries */}
       <div className="space-y-4">
-        {filteredEntries.length === 0 ? (
+        {isLoading ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <p className="text-muted-foreground">Loading your entries...</p>
+            </CardContent>
+          </Card>
+        ) : filteredEntries.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
               <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -264,8 +324,9 @@ export default function Diary() {
               </CardContent>
             </Card>
           ))
-        )}
-      </div>
-    </div>
-  );
-}
+         )}
+       </div>
+       </div>
+     </div>
+   );
+ }
